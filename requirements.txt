@@ -1,0 +1,3 @@
+streamlit==1.36.0
+streamlit-authentication @ git+https://github.com/edire/streamlit-authentication.git@fa7436db2b3957b430b2559ec1201017a4222f4a
+streamlit-autorefresh==1.0.1

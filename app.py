@@ -2,11 +2,11 @@ import os
 import streamlit as st
 import pandas as pd
 from google.cloud import bigquery
-# from streamlit_authentication.google_oauth import authenticate
+from streamlit_authentication.google_oauth import authenticate
 from streamlit_autorefresh import st_autorefresh
 
 
-# @authenticate
+@authenticate
 def main():
     st_autorefresh(interval=3610 * 1000, key="fizzbuzzcounter")
     # Authenticate with Google Cloud

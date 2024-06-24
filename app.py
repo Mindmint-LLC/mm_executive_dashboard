@@ -35,13 +35,6 @@ def main():
     # Convert 'due_date' to just date
     filtered_df['due_date'] = filtered_df['due_date'].dt.date
 
-    # Aggregate units by due_date
-    aggregated_data = filtered_df.groupby('due_date').agg({'units': 'sum'}).reset_index()
-
-    # Display the aggregated data for inspection
-    st.subheader('Filtered and Aggregated Data')
-    st.dataframe(aggregated_data)
-
     # Create a bar chart using Plotly
     # st.subheader('Total Trials Due')
     # fig = px.bar(aggregated_data, x='due_date', y='units', labels={'due_date': 'Date', 'units': 'Total Units'}, title='Total Trials Due')
@@ -81,6 +74,13 @@ def main():
     create_metric_row([("Unpaid", f"{total_unpaid:,}"), ("Paid", f"{total_paid:,}"), ("Refund", f"{refund_total:,}"), ("Upgrade", f"{upgrade_total:,}")])
     create_metric_row([("Paid/Upgrade %", f"{paid_upgrade_percentage:.1f}%"), ("Refund %", f"{refund_percentage:.1f}%")])
     create_metric_row([("Failed First Attempt", f"{total_failed_first:,}"), ("Failed First %", f"{failed_first_percentage:.1f}%"), ("Recovered", f"{total_recovered:,}"), ("Recovered %", f"{recovered_percentage:.1f}%")])
+
+    # Aggregate units by due_date
+    aggregated_data = filtered_df.groupby('due_date').agg({'units': 'sum'}).reset_index()
+
+    # Display the aggregated data for inspection
+    st.subheader('Filtered and Aggregated Data')
+    st.dataframe(aggregated_data)
 
 
 main()

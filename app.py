@@ -81,3 +81,6 @@ def main():
     create_metric_row([("Unpaid", f"{total_unpaid:,}"), ("Paid", f"{total_paid:,}"), ("Refund", f"{refund_total:,}"), ("Upgrade", f"{upgrade_total:,}")])
     create_metric_row([("Paid/Upgrade %", f"{paid_upgrade_percentage:.1f}%"), ("Refund %", f"{refund_percentage:.1f}%")])
     create_metric_row([("Failed First Attempt", f"{total_failed_first:,}"), ("Failed First %", f"{failed_first_percentage:.1f}%"), ("Recovered", f"{total_recovered:,}"), ("Recovered %", f"{recovered_percentage:.1f}%")])
+
+
+main()

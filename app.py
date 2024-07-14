@@ -6,6 +6,11 @@ from streamlit_authentication.google_oauth import authenticate
 from streamlit_autorefresh import st_autorefresh
 
 
+st.experimental_set_header('Access-Control-Allow-Origin', '*')
+st.experimental_set_header('Access-Control-Allow-Headers', 'Content-Type')
+st.experimental_set_header('Access-Control-Allow-Methods', 'OPTIONS,GET,POST')
+
+
 @authenticate
 def main():
     st_autorefresh(interval=3610 * 1000, key="fizzbuzzcounter")

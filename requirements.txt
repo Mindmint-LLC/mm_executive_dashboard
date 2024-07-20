@@ -1,5 +1,3 @@
 streamlit==1.36.0
 git+https://github.com/edire/streamlit-authentication.git
-streamlit-autorefresh==1.0.1
-google-cloud-bigquery
-db-dtypes
+dbharbor

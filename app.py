@@ -1,86 +1,124 @@
-import os
+#%%
+
 import streamlit as st
-import pandas as pd
-from google.cloud import bigquery
+from dbharbor.bigquery import SQL
 from streamlit_authentication.google_oauth import authenticate
-from streamlit_autorefresh import st_autorefresh
+
+
+#%%
+
+def box_text(my_string, font_size=24):
+  st.markdown(f"<div style='text-align: center; font-weight: bold; font-size: {font_size}px;'>{my_string}</div>", unsafe_allow_html=True)
+
+
+@st.cache_data(ttl=60 * 60 * 12) # seconds
+def get_data():
+    con = SQL()
+
+    sql = """
+    with max_eom as (
+    select max(eom) as eom
+    from `bbg-platform.analytics.fct_mastermind__subscriptions_monthly`
+    )
+
+    select m.product_eom
+    , m.is_trial
+    , count(*) as units
+    from `bbg-platform.analytics.fct_mastermind__subscriptions_monthly` m
+    join max_eom me
+        on m.eom = me.eom
+    where m.is_cancelled = 0
+    group by all
+    """
+    df = con.read(sql)
+
+    return df
+
+
+#%%
+
+if 'page_set' not in st.session_state:
+    st.set_page_config(layout="wide")
+    st.session_state['page_set'] = True
+
+
+st.markdown("""
+        <style>
+               .block-container {
+                    padding-top: 0rem;
+                    padding-bottom: 0rem;
+                    padding-left: 5rem;
+                    padding-right: 5rem;
+                }
+        </style>
+        """, unsafe_allow_html=True)
 
 
 @authenticate
 def main():
-    st_autorefresh(interval=3610 * 1000, key="fizzbuzzcounter")
-    # Authenticate with Google Cloud
-    client = bigquery.Client.from_service_account_json(os.getenv('BIGQUERY_CRED'))
 
-    # Query your BigQuery view
-    query = """
-    SELECT *
-    FROM `bbg-platform.challenges.ghc_trial_conversions_vw`
-    """
+    # logo_url = "https://path_to_your_logo/logo.png"
+    # st.image(logo_url, width=100)d
 
-    @st.cache_data(ttl=3600)  # Cache the data for 1 hour (3600 seconds)
-    def load_data():
-        df = client.query(query).to_dataframe()
-        df['due_date'] = pd.to_datetime(df['due_date'])  # Convert 'due_date' to datetime
-        return df
+    st.title('Mastermind Portfolio')
+    st.markdown('<br><br>', unsafe_allow_html=True)
 
-    # Load the data
-    df = load_data()
-
-    # Filter data for the date range 6/20/24 to 7/15/24 and aggregate units by due_date
-    start_date = pd.to_datetime('2024-06-20')
-    end_date = pd.to_datetime('2024-07-15')
-    filtered_df = df[(df['due_date'] >= start_date) & (df['due_date'] <= end_date)]
-
-    # Convert 'due_date' to just date
-    filtered_df['due_date'] = filtered_df['due_date'].dt.date
-
-    # Create a bar chart using Plotly
-    # st.subheader('Total Trials Due')
-    # fig = px.bar(aggregated_data, x='due_date', y='units', labels={'due_date': 'Date', 'units': 'Total Units'}, title='Total Trials Due')
-    # st.plotly_chart(fig, use_container_width=True)
-
-    # Calculate the required metrics
-    total_active = df['units'].sum()
-    total_paid = df[df['invoice_status'] == 'paid']['units'].sum()
-    total_unpaid = df[df['invoice_status'] == 'unpaid']['units'].sum()
-    total_failed_first = df['failed_first_attempt'].sum()
-    total_recovered = df['failed_recovered'].sum()
-
-    # Calculate additional metrics
-    total_cancelled = df[df['invoice_status'] == 'cancelled']['units'].sum()
-    cancelled_percentage = (total_cancelled / total_active) * 100 if total_active > 0 else 0
-    refund_total = df[df['invoice_status'] == 'refund']['units'].sum()
-    upgrade_total = df[df['invoice_status'] == 'upgrade']['units'].sum()  
-    paid_upgrade_percentage = (total_paid + upgrade_total) / total_active * 100 if total_active > 0 else 0
-    refund_percentage = (refund_total / total_active) * 100 if total_active > 0 else 0
-    failed_first_percentage = (total_failed_first / total_active) * 100 if total_active > 0 else 0
-    recovered_percentage = (total_recovered / total_failed_first) * 100 if total_failed_first > 0 else 0
-
-    # Create Streamlit dashboard
-    st.title('Subscription Dashboard')
-
-    # Display metrics in specified rows
-    st.subheader('Overview Metrics')
-
-    # Define function to create a row with specified columns and spacing
-    def create_metric_row(metrics):
-        cols = st.columns([1, 0.1, 1, 0.1, 1, 0.1, 1, 0.1, 1])
-        for i, (label, value) in enumerate(metrics):
-            cols[i * 2].metric(label, value)
-
-    # Create rows with metrics and adjusted spacing for left alignment
-    create_metric_row([("Total", f"{total_active:,}"), ("Cancelled", f"{total_cancelled:,}"), ("Cancelled %", f"{cancelled_percentage:.1f}%")])
-    create_metric_row([("Unpaid", f"{total_unpaid:,}"), ("Paid", f"{total_paid:,}"), ("Refund", f"{refund_total:,}"), ("Upgrade", f"{upgrade_total:,}")])
-    create_metric_row([("Paid/Upgrade %", f"{paid_upgrade_percentage:.1f}%"), ("Refund %", f"{refund_percentage:.1f}%")])
-    create_metric_row([("Failed First Attempt", f"{total_failed_first:,}"), ("Failed First %", f"{failed_first_percentage:.1f}%"), ("Recovered", f"{total_recovered:,}"), ("Recovered %", f"{recovered_percentage:.1f}%")])
-
-    # Aggregate units by due_date
-    aggregated_data = filtered_df.groupby('due_date').agg({'units': 'sum'}).reset_index()
-
-    # Display the aggregated data for inspection
-    st.subheader('Filtered and Aggregated Data')
-    st.dataframe(aggregated_data)
+    df = get_data()
+    subscriptions = ['47 membership', '423 membership', '97 membership', '997 membership', 'Total']
+    total = len(subscriptions)
 
 
-main()
+    #%%
+
+    cols = st.columns(total)
+    with cols[0]:
+        st.markdown(f"<div style='text-align: left; font-weight: bold; font-size: 36px;'>Active</div>", unsafe_allow_html=True)
+
+    cols = st.columns(total)
+    for i in range(total):
+        sub = subscriptions[i]
+
+        if i < total - 1:
+            df_temp = df[(df['product_eom'] == sub) & (df['is_trial'] == 0)]
+            units = df_temp['units'].iat[0]
+            with cols[i]:
+                box_text(sub)
+                box_text("{:,}".format(units))
+
+        if i == total - 1:
+            df_temp = df[df['is_trial'] == 0]
+            units = df_temp['units'].sum()
+            with cols[i]:
+                box_text(sub)
+                box_text("{:,}".format(units))
+            
+
+    #%%
+
+    st.markdown('<br><br>', unsafe_allow_html=True)
+
+    cols = st.columns(total)
+    with cols[0]:
+        st.markdown(f"<div style='text-align: left; font-weight: bold; font-size: 36px;'>Trial</div>", unsafe_allow_html=True)
+
+    cols = st.columns(total)
+    for i in range(total):
+        sub = subscriptions[i]
+
+        if i < total - 1:
+            df_temp = df[(df['product_eom'] == sub) & (df['is_trial'] == 1)]
+            units = df_temp['units'].iat[0]
+            with cols[i]:
+                box_text(sub)
+                box_text("{:,}".format(units))
+
+        if i == total - 1:
+            df_temp = df[df['is_trial'] == 1]
+            units = df_temp['units'].sum()
+            with cols[i]:
+                box_text(sub)
+                box_text("{:,}".format(units))
+
+
+if __name__ == '__main__':
+    main()

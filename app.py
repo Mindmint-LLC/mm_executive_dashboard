@@ -4,7 +4,7 @@ import streamlit as st
 from dbharbor.bigquery import SQL
 import numpy as np
 import dgsheet
-#from streamlit_authentication.google_oauth import authenticate
+from streamlit_authentication.google_oauth import authenticate
 import pathlib
 import matplotlib.pyplot as plt
 
@@ -136,7 +136,7 @@ st.markdown("""
         """, unsafe_allow_html=True)
 
 
-#@authenticate
+@authenticate
 def main():
 
     # logo_url = "https://path_to_your_logo/logo.png"

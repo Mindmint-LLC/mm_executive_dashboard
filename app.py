@@ -5,11 +5,8 @@ from dbharbor.bigquery import SQL
 import numpy as np
 import dgsheet
 #from streamlit_authentication.google_oauth import authenticate
-import os
 import pathlib
-from dotenv import load_dotenv
 import matplotlib.pyplot as plt
-load_dotenv()
 
 # Access the environment variables
 sql_file_dir_path = f"{pathlib.Path(__file__).resolve().parents[0]}/Queries/"
@@ -22,7 +19,7 @@ def box_text(my_string, font_size=24):
 
 @st.cache_data(ttl=60 * 60 * 12) # seconds
 def get_data(query_file_name):
-    con = SQL(  credentials_filepath = os.getenv('BIGQUERY_CRED'))
+    con = SQL()
     with open(f"{sql_file_dir_path}{query_file_name}.sql") as sql_file:
         sql = sql_file.read()
         df = con.read(sql)

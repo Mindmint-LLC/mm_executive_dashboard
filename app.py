@@ -7,9 +7,7 @@ import dgsheet
 #from streamlit_authentication.google_oauth import authenticate
 import os
 import pathlib
-from dotenv import load_dotenv
 import matplotlib.pyplot as plt
-load_dotenv()
 
 # Access the environment variables
 sql_file_dir_path = f"{pathlib.Path(__file__).resolve().parents[0]}/Queries/"

@@ -4,9 +4,12 @@ import streamlit as st
 from dbharbor.bigquery import SQL
 import numpy as np
 import dgsheet
-from streamlit_authentication.google_oauth import authenticate
+#from streamlit_authentication.google_oauth import authenticate
+import os
 import pathlib
+from dotenv import load_dotenv
 import matplotlib.pyplot as plt
+load_dotenv()
 
 # Access the environment variables
 sql_file_dir_path = f"{pathlib.Path(__file__).resolve().parents[0]}/Queries/"
@@ -19,7 +22,7 @@ def box_text(my_string, font_size=24):
 
 @st.cache_data(ttl=60 * 60 * 12) # seconds
 def get_data(query_file_name):
-    con = SQL()
+    con = SQL(  credentials_filepath = os.getenv('BIGQUERY_CRED'))
     with open(f"{sql_file_dir_path}{query_file_name}.sql") as sql_file:
         sql = sql_file.read()
         df = con.read(sql)
@@ -58,7 +61,7 @@ def display_subscription_info(subscriptions, subscription_trials_df, total, is_t
 def get_data_gsheets():
 
     url = 'https://docs.google.com/spreadsheets/d/1LzYYliKurBl9TZsA436z-NTKPV3bOEEA_DaA13ctcfQ/edit?gid=83865450#gid=83865450'
-    filepath_cred = "/Users/d/Downloads/Streamlit/.streamlit/bbg-platform-9b535c1b7c76.json"
+    filepath_cred = os.getenv('BIGQUERY_CRED')
 
     df = dgsheet.read_gsheet(url, filepath_cred=filepath_cred, skiprows=11, usecols="A:F", nrows=7)
 
@@ -136,7 +139,7 @@ st.markdown("""
         """, unsafe_allow_html=True)
 
 
-@authenticate
+#@authenticate
 def main():
 
     # logo_url = "https://path_to_your_logo/logo.png"

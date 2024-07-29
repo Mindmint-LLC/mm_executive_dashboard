@@ -5,7 +5,7 @@
     )
 
     select 
-       FORMAT_TIMESTAMP('%b-%Y', me.eom)  AS month
+       FORMAT_TIMESTAMP('%b-%Y', me.eom)  AS Month
     , me.eom
     , count(case when m.product_eom = '47 membership' then  1 end) as `47 membership`
     , count(case when m.product_eom = '423 membership' then  1 end) as `423 membership`

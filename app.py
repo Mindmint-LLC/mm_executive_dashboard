@@ -1,13 +1,16 @@
 #%%
+import plotly.graph_objs as go
 
 import streamlit as st
 from dbharbor.bigquery import SQL
 import numpy as np
 import dgsheet
-#from streamlit_authentication.google_oauth import authenticate
+from streamlit_authentication.google_oauth import authenticate
 import os
 import pathlib
+from dotenv import load_dotenv
 import matplotlib.pyplot as plt
+load_dotenv()
 
 # Access the environment variables
 sql_file_dir_path = f"{pathlib.Path(__file__).resolve().parents[0]}/Queries/"
@@ -78,10 +81,9 @@ def get_data_gsheets():
     return df
 
 
-
 def plot_line_charts(data, x_axis, y_axis, measure_axis, secondary_y_axis=None, secondary_y_label=None):
     """
-    Plots line charts with optional secondary y-axis.
+    Plots line charts with optional secondary y-axis using Plotly.
     
     Args:
     - data (DataFrame): Data for plotting.
@@ -92,31 +94,70 @@ def plot_line_charts(data, x_axis, y_axis, measure_axis, secondary_y_axis=None, 
     - secondary_y_label (str, optional): Label for the secondary y-axis.
     """
     
-    fig, ax1 = plt.subplots(figsize=(15, 5))
+    # Create the figure
+    fig = go.Figure()
 
     # Plot primary y-axis data series
     for measure in measure_axis:
-        ax1.plot(data[x_axis], data[measure], label=measure)
-    
-    plt.xticks(rotation=90)
-    ax1.set_xlabel(x_axis)
-    ax1.set_ylabel(y_axis)
-    ax1.legend(loc='upper left')
-    
+        dash='dot' if '6 pay' in measure.lower() else 'solid'
+        fig.add_trace(go.Scatter(
+            x=data[x_axis], 
+            y=data[measure], 
+            mode='lines', 
+            name=measure,
+            yaxis='y1',
+            line=dict(dash= dash)
+
+        ))
+
+
+    titlefont = {'size': 18, 'color': 'black', 'family': 'Arial Black, sans-serif'}
+    tickfont = {'size': 12, 'color': 'black', 'family': 'Arial Ash, sans-serif'}
+    tickangle = 90 if x_axis == 'Month' else 0
+    title_standoff = 45
+    tickformat='.0%' if x_axis == 'Invoice Number' else None
+
+    # Update layout for primary y-axis
+    fig.update_layout(
+        xaxis=dict(title=x_axis, tickangle=tickangle, titlefont=titlefont, tickfont =tickfont,title_standoff=title_standoff),
+        yaxis=dict(title=y_axis, titlefont=titlefont, tickfont =tickfont, title_standoff=title_standoff,tickformat = tickformat)
+    )
+
     # Plot secondary y-axis if provided
     if secondary_y_axis:
-        ax2 = ax1.twinx()
-        ax2.plot(data[x_axis], data[secondary_y_axis], label=secondary_y_axis, color='tab:red')
-        ax2.set_ylabel(secondary_y_label, color='tab:red')
-        ax2.tick_params(axis='y', labelcolor='tab:red')
-        
-        # Add legend for the secondary y-axis
-        lines2, labels2 = ax2.get_legend_handles_labels()
-        ax2.legend(lines2, labels2, loc='upper right')
+        fig.add_trace(go.Scatter(
+            x=data[x_axis], 
+            y=data[secondary_y_axis], 
+            mode='lines', 
+            name=secondary_y_axis,
+            yaxis='y2',
+            line=dict(color='green', dash='dot')
+        ))
+        # Update layout for secondary y-axis
+        fig.update_layout(
+            yaxis2=dict(
+                title=secondary_y_label,
+                overlaying='y',
+                side='right',
+                tickfont=dict(color='green'),
+                titlefont=dict(color='green'),
+                range=[0, 1] 
+            )
+        )
     
-    # Display the plot in Streamlit
-    st.pyplot(fig)
 
+        # Update layout for legend position
+    fig.update_layout(
+        legend=dict(
+            x=0.5,  # X position of the legend (0 is left, 1 is right)
+            y=1.1,  # Y position of the legend (0 is bottom, 1 is top)
+            xanchor='center',  # Anchor the legend at the center of the x position
+            yanchor='top',  # Anchor the legend at the top of the y position
+            orientation='h'  # Horizontal orientation
+        )
+    )
+    # Display the plot in Streamlit
+    st.plotly_chart(fig)
 
 
 
@@ -137,7 +178,7 @@ st.markdown("""
         """, unsafe_allow_html=True)
 
 
-#@authenticate
+@authenticate
 def main():
 
     # logo_url = "https://path_to_your_logo/logo.png"
@@ -158,13 +199,16 @@ def main():
     cols = st.columns(total)
 
 
-    display_subscription_info(subscriptions, subscription_trials_df, total, is_trial=0, section_title="Total Subscribers")
+    display_subscription_info(subscriptions, subscription_trials_df, total, is_trial=0, section_title="Active Subscribers")
 
     st.markdown('<br><br>', unsafe_allow_html=True)
 
     # Display Trial subscriptions
     display_subscription_info(subscriptions, subscription_trials_df, total, is_trial=1, section_title="Trial")
 
+    st.markdown('<br><br>', unsafe_allow_html=True)
+
+    display_subscription_info(subscriptions, subscription_trials_df, total, is_trial=2, section_title="Total")
 
 
     #%%
@@ -173,10 +217,10 @@ def main():
 
     st.markdown(f"<div style='text-align: left; font-weight: bold; font-size: 36px;'> </div>", unsafe_allow_html=True)
  
-    subscription_trials_table_df = get_data('current_subscription_n_trials_table')
-    subscription_trials_table_df.rename(columns={'product_eom': ''}, inplace=True)
-    subscription_trials_table_df.set_index('', inplace=True)
-    st.dataframe(subscription_trials_table_df, use_container_width=True)
+    # subscription_trials_table_df = get_data('current_subscription_n_trials_table')
+    # subscription_trials_table_df.rename(columns={'product_eom': ''}, inplace=True)
+    # subscription_trials_table_df.set_index('', inplace=True)
+    # st.dataframe(subscription_trials_table_df, use_container_width=True)
 
 
     st.markdown('<br><br>', unsafe_allow_html=True)
@@ -188,14 +232,14 @@ def main():
 # Plot with only primary y-axis
     plot_line_charts(
         data=mas_linechart_df,
-        x_axis='month',
+        x_axis='Month',
         y_axis='Count',
         measure_axis=["47 membership", "423 membership", "997 membership", "97 membership"]
     )
 
 
     st.markdown('<br><br>', unsafe_allow_html=True)
-    st.markdown(f"<div style='text-align: left; font-weight: bold; font-size: 36px;'>Monthly Active Subscriptions </div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: left; font-weight: bold; font-size: 36px;'>MBA Metrics</div>", unsafe_allow_html=True)
 
 
     mba_linechart_df = get_data('mba')
@@ -203,7 +247,7 @@ def main():
     # Plot with both primary and secondary y-axes
     plot_line_charts(
         data=mba_linechart_df,
-        x_axis='month',
+        x_axis='Month',
         y_axis='Count',
         measure_axis=["sales", "cancels", "active"],
         secondary_y_axis='pif_sales_ratio',
@@ -216,7 +260,15 @@ def main():
     st.markdown(f"<div style='text-align: left; font-weight: bold; font-size: 36px;'>Payment Plan Performance </div>", unsafe_allow_html=True)
 
     payment_plan = get_data_gsheets()
-    st.line_chart(payment_plan,x="Invoice Number", y=["Project Next 3 Pay", "Project Next 6 Pay", "Launchpad 3 Pay", "Launchpad 6 Pay", "MBS 3 Pay"])
+
+    # Plot with both primary and secondary y-axes
+    plot_line_charts(
+        data=payment_plan,
+        x_axis='Invoice Number',
+        y_axis='Percentage',
+        measure_axis=["Project Next 3 Pay", "Project Next 6 Pay", "Launchpad 3 Pay", "Launchpad 6 Pay", "MBS 3 Pay"]
+    )
+
 
 
 

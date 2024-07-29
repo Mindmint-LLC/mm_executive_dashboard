@@ -3,4 +3,5 @@ git+https://github.com/edire/streamlit-authentication.git
 git+https://github.com/edire/dgsheet.git
 dbharbor
 matplotlib>=3.4.0
+python-dotenv==0.21.0
 

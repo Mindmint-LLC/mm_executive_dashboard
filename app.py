@@ -5,7 +5,7 @@ import streamlit as st
 from dbharbor.bigquery import SQL
 import numpy as np
 import dgsheet
-from streamlit_authentication.google_oauth import authenticate
+#from streamlit_authentication.google_oauth import authenticate
 import os
 import pathlib
 from dotenv import load_dotenv
@@ -105,7 +105,7 @@ def plot_line_charts(data, x_axis, y_axis, measure_axis, secondary_y_axis=None, 
             mode='lines', 
             name=measure,
             yaxis='y1',
-            line=dict(dash= dash)
+            line=dict(dash=dash, shape='spline', width=2)
 
         ))
 
@@ -177,7 +177,7 @@ st.markdown("""
         """, unsafe_allow_html=True)
 
 
-@authenticate
+#@authenticate
 def main():
 
     # logo_url = "https://path_to_your_logo/logo.png"

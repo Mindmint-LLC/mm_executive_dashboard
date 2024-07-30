@@ -1,6 +1,6 @@
 SELECT  sum(num_sales) as sales
 , - (sum(num_cancel)  + sum(num_paused)) as cancels
-, sum(num_active)   as active
+, sum(num_sales) - sum(num_cancel) - sum(num_paused)   as active
 --  , sum(num_requests) as requests
 -- , sum(num_paused) as paused
 --  , sum(num_saved) as saved

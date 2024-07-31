@@ -5,7 +5,7 @@ import streamlit as st
 from dbharbor.bigquery import SQL
 import numpy as np
 import dgsheet
-#from streamlit_authentication.google_oauth import authenticate
+from streamlit_authentication.google_oauth import authenticate
 import os
 import pathlib
 from dotenv import load_dotenv
@@ -122,16 +122,23 @@ def plot_line_charts(data, x_axis, y_axis, measure_axis, secondary_y_axis=None, 
         yaxis=dict(title=y_axis, titlefont=titlefont, tickfont =tickfont, title_standoff=title_standoff,tickformat = tickformat)
     )
 
-    # Plot secondary y-axis if provided
+
+
+
+
     if secondary_y_axis:
-        fig.add_trace(go.Scatter(
-            x=data[x_axis], 
-            y=data[secondary_y_axis], 
-            mode='lines', 
-            name=secondary_y_axis,
-            yaxis='y2',
-            line=dict(color='green', dash='dot')
-        ))
+        colors = ['green', 'orange', 'purple']  # Add more colors if needed
+        for i, measure in enumerate(secondary_y_axis):
+            color = colors[i % len(colors)]
+            fig.add_trace(go.Scatter(
+                x=data[x_axis], 
+                y=data[measure], 
+                mode='lines', 
+                name=measure,
+                yaxis='y2',
+                line=dict(color=color, dash='dot')
+            ))
+
         # Update layout for secondary y-axis
         fig.update_layout(
             yaxis2=dict(
@@ -177,7 +184,7 @@ st.markdown("""
         """, unsafe_allow_html=True)
 
 
-#@authenticate
+@authenticate
 def main():
 
     # logo_url = "https://path_to_your_logo/logo.png"
@@ -248,9 +255,9 @@ def main():
         data=mba_linechart_df,
         x_axis='Month',
         y_axis='Count',
-        measure_axis=["sales", "cancels", "active"],
-        secondary_y_axis='pif_sales_ratio',
-        secondary_y_label='PIF Sales Ratio'
+        measure_axis=["Sales", "Cancels", "Total Active"],
+        secondary_y_axis=['pif_sales_ratio',"Drop Rate"],
+        secondary_y_label='Ratio (Dotted Lines)'
     )
 
 

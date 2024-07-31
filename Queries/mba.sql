@@ -9,7 +9,7 @@ with mba_summary as
   -- , sum(num_paused) as paused
   --  , sum(num_saved) as saved
   --  , sum(num_active) + sum(num_paused) as enrolled
-  , ROUND(SUM(CASE WHEN pay_type = 'PIF' THEN num_sales ELSE 0 END) / SUM(num_sales),2) AS pif_sales_ratio
+  , ROUND(SUM(CASE WHEN pay_type = 'PIF' THEN num_sales ELSE 0 END) / SUM(num_sales),2) AS `PIF Sales Ratio` 
   , LAST_DAY(DATE(date_closed)) as date_closed
   , FORMAT_TIMESTAMP('%b-%Y', LAST_DAY(DATE(date_closed))) as Month
   FROM `bbg-platform.dbt_tscrivo.fct_hs_deal_N`

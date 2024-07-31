@@ -5,7 +5,7 @@ import streamlit as st
 from dbharbor.bigquery import SQL
 import numpy as np
 import dgsheet
-from streamlit_authentication.google_oauth import authenticate
+#from streamlit_authentication.google_oauth import authenticate
 import os
 import pathlib
 from dotenv import load_dotenv
@@ -184,7 +184,7 @@ st.markdown("""
         """, unsafe_allow_html=True)
 
 
-@authenticate
+#@authenticate
 def main():
 
     # logo_url = "https://path_to_your_logo/logo.png"
@@ -256,7 +256,7 @@ def main():
         x_axis='Month',
         y_axis='Count',
         measure_axis=["Sales", "Cancels", "Total Active"],
-        secondary_y_axis=['pif_sales_ratio',"Drop Rate"],
+        secondary_y_axis=['PIF Sales Ratio',"Drop Rate"],
         secondary_y_label='Ratio (Dotted Lines)'
     )
 
